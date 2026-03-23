@@ -1,0 +1,99 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui;
+  --font-serif: var(--font-playfair), ui-serif, Georgia;
+
+  --color-background: #0E0E0E;
+  --color-foreground: #F5F3EF;
+
+  /* Card and subtle backgrounds */
+  --color-card: #141414;
+  --color-card-foreground: #F5F3EF;
+  --color-popover: #141414;
+  --color-popover-foreground: #F5F3EF;
+
+  /* BRAND COLORS */
+  --color-primary: #C46A3C; /* Accent Orange/Rust */
+  --color-primary-foreground: #0E0E0E; /* Dark text on accent */
+  
+  --color-secondary: #D8D2C6; /* Light Beige/Grey */
+  --color-secondary-foreground: #0E0E0E; /* Dark text on light beige */
+
+  --color-muted: #262626;
+  --color-muted-foreground: #A1A1A1;
+
+  --color-accent: #C46A3C;
+  --color-accent-foreground: #0E0E0E;
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  --color-border: #262626;
+  --color-input: #262626;
+  --color-ring: #C46A3C;
+
+  --radius-xl: 1rem;
+  --radius-lg: 0.5rem;
+  --radius-md: calc(0.5rem - 2px);
+  --radius-sm: calc(0.5rem - 4px);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these base styles back for backward compatibility.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+  
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    @apply antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+  }
+}
+
+/* Hide scrollbar for clean minimal look but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-background/30 backdrop-blur-lg border border-foreground/10;
+  }
+  
+  .glass-card {
+    @apply bg-card/40 backdrop-blur-2xl border border-foreground/5 shadow-2xl;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(245, 243, 239, 0.3);
+  }
+
+  .tracking-luxury {
+    letter-spacing: 0.25em;
+  }
+}
