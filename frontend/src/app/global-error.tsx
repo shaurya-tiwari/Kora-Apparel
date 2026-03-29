@@ -9,19 +9,43 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen flex flex-col items-center justify-center p-8 text-center bg-background text-foreground">
-        <div className="max-w-md w-full space-y-6">
-          <h2 className="text-4xl font-serif lowercase tracking-tight">Something went wrong!</h2>
-          <p className="text-muted-foreground text-sm uppercase tracking-widest font-light">
-            We've encountered a system-wide error. Please try refreshing.
-          </p>
-          <button 
-            onClick={() => reset()}
-            className="px-8 py-3 bg-foreground text-background uppercase tracking-widest text-[10px] font-black hover:bg-primary transition-all duration-300"
-          >
-            Try again
-          </button>
-        </div>
+      <body
+        style={{
+          margin: 0,
+          padding: '40px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          fontFamily: 'system-ui, sans-serif',
+          backgroundColor: '#0a0a0a',
+          color: '#fafafa',
+          textAlign: 'center',
+        }}
+      >
+        <h2 style={{ fontSize: '2rem', marginBottom: '1rem', fontWeight: 300 }}>
+          Something went wrong
+        </h2>
+        <p style={{ color: '#888', fontSize: '0.875rem', marginBottom: '2rem' }}>
+          An unexpected error occurred. Please try again.
+        </p>
+        <button
+          onClick={() => reset()}
+          style={{
+            padding: '12px 32px',
+            backgroundColor: '#fafafa',
+            color: '#0a0a0a',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Try again
+        </button>
       </body>
     </html>
   );
