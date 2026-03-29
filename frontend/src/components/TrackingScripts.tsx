@@ -9,16 +9,17 @@ import api from '@/lib/api';
  * Rendered server-side on every page via the root layout.
  */
 export default function TrackingScripts() {
-  const { data: settings } = useQuery({
+  const { data: settings, isError } = useQuery({
     queryKey: ['tracking-settings'],
     queryFn: async () => {
       const { data } = await api.get('/settings');
       return data;
     },
-    staleTime: 5 * 60 * 1000, // cache 5 minutes
+    staleTime: 5 * 60 * 1000,
+    retry: false, // Don't retry during build
   });
 
-  if (!settings) return null;
+  if (!settings || isError) return null;
 
   const { fbPixelId, fbPixelEnabled, gaId, gaEnabled, gtmId, gtmEnabled } = settings;
 
