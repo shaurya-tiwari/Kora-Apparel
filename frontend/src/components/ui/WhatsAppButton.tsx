@@ -1,8 +1,22 @@
 'use client';
 
 import { MessageCircle } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export function WhatsAppButton() {
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Hide on admin routes or until mounted to prevent hydration mismatch
+  if (!mounted || pathname.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <a 
       href="https://wa.me/919876543210?text=Hi%20Kora%20Apparel!%20I%20need%20some%20help." 

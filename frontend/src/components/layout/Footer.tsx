@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { getImageUrl } from '@/lib/imageUrl';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, Instagram, Twitter, Facebook } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useState } from 'react';
@@ -70,27 +71,42 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="md:col-span-1">
-            <h2 className="text-3xl font-serif tracking-widest font-bold mb-6">KORA</h2>
-            <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-              Premium, minimal fashion designed for the bold. Redefining modern apparel with timeless silhouettes.
+            <Link href="/" className="inline-block transition-transform hover:scale-105 active:scale-95 duration-300">
+              {settings?.logo ? (
+                <img src={getImageUrl(settings.logo)} alt="Kora Apparel" className="h-8 md:h-10 w-auto object-contain" />
+              ) : (
+                <h2 className="text-2xl font-serif font-bold tracking-luxury text-primary">KORA</h2>
+              )}
+            </Link>
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-xs mb-8">
+              {settings?.brandDescription || 'Premium, minimal fashion designed for the bold. Redefining modern apparel with timeless silhouettes.'}
             </p>
+
+            {/* Social Links */}
+            <div className="flex gap-5">
+              {settings?.socialLinks?.instagram && (
+                <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                  <Instagram className="w-5 h-5" />
+                </a>
+              )}
+              {settings?.socialLinks?.twitter && (
+                <a href={settings.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                  <Twitter className="w-5 h-5" />
+                </a>
+              )}
+              {settings?.socialLinks?.facebook && (
+                <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                  <Facebook className="w-5 h-5" />
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Dynamic Category Shop Links */}
           <div>
             <h4 className="text-sm font-semibold uppercase tracking-widest mb-6 text-foreground">Shop</h4>
             <ul className="space-y-4">
-              <li>
-                <Link href="/shop" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                  All Products
-                </Link>
-              </li>
-              <li>
-                <Link href="/drops" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                  Latest Drops
-                </Link>
-              </li>
-              {shopCategories.map((cat: any) => (
+              {shopCategories.length > 0 ? shopCategories.map((cat: any) => (
                 <li key={cat._id}>
                   <Link
                     href={`/shop?category=${encodeURIComponent(cat.slug)}`}
@@ -99,7 +115,12 @@ export default function Footer() {
                     {cat.name}
                   </Link>
                 </li>
-              ))}
+              )) : (
+                <>
+                  <li><Link href="/shop" className="text-muted-foreground hover:text-primary transition-colors text-sm">All Products</Link></li>
+                  <li><Link href="/drops" className="text-muted-foreground hover:text-primary transition-colors text-sm">Latest Drops</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
@@ -144,7 +165,7 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-muted-foreground/10 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} {brandName}. All rights reserved.</p>
+          <p suppressHydrationWarning={true}>© {new Date().getFullYear()} Kora Apparel. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>

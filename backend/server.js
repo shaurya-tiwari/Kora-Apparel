@@ -24,6 +24,7 @@ const categoryRoutes = require('./routes/categories');
 const notificationRoutes = require('./routes/notifications');
 const contactRoutes = require('./routes/contact');
 const newsletterRoutes = require('./routes/newsletter');
+const Notification = require('./models/Notification');
 
 const app = express();
 
@@ -37,7 +38,7 @@ app.use(morgan('dev'));
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 1000, // Increased for development
   message: 'Too many requests, please try again later.',
 });
 app.use('/api/', limiter);
@@ -54,6 +55,23 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// DIRECT NOTIFICATION ROUTES (Final Secured)
+const { protect, adminOnly } = require('./middleware/auth');
+
+app.delete('/api/notifications/remove/:id', protect, adminOnly, async (req, res) => {
+  try {
+    await Notification.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Removed' });
+  } catch (err) { res.status(500).json(err); }
+});
+
+app.delete('/api/notifications/clear-all', protect, adminOnly, async (req, res) => {
+  try {
+    await Notification.deleteMany({});
+    res.json({ message: 'Cleared All' });
+  } catch (err) { res.status(500).json(err); }
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);

@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useSearchParams } from 'next/navigation';
+import { getImageUrl } from '@/lib/imageUrl';
 import { WishlistButton } from '@/components/ui/WishlistButton';
 import { motion } from 'framer-motion';
 
@@ -33,12 +34,12 @@ function ShopContent() {
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState('newest');
 
-  const { 
-    data, 
-    isLoading, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage 
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
   } = useInfiniteQuery({
     queryKey: ['products', { category, sort }],
     queryFn: fetchProducts,
@@ -93,13 +94,13 @@ function ShopContent() {
   ];
 
   return (
-    <div className="pt-24 pb-32">
+    <div className="pt-40 pb-32">
       <div className="container mx-auto px-6 max-w-7xl">
 
         {/* HEADER & FILTERS */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-border pb-8">
           <div>
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -107,7 +108,7 @@ function ShopContent() {
             >
               The Collection
             </motion.h1>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
@@ -152,11 +153,10 @@ function ShopContent() {
                 <button
                   key={cat.slug}
                   onClick={() => setCategory(cat.slug)}
-                  className={`uppercase tracking-widest text-xs transition-colors hover:text-primary whitespace-nowrap ${
-                    category === cat.slug
-                      ? 'text-primary font-bold border-b border-primary pb-1'
-                      : 'text-muted-foreground'
-                  }`}
+                  className={`uppercase tracking-widest text-xs transition-colors hover:text-primary whitespace-nowrap ${category === cat.slug
+                    ? 'text-primary font-bold border-b border-primary pb-1'
+                    : 'text-muted-foreground'
+                    }`}
                 >
                   {cat.name}
                 </button>
@@ -206,7 +206,7 @@ function ShopContent() {
           </div>
         ) : (
           <>
-            <motion.div 
+            <motion.div
               initial="hidden"
               animate="visible"
               variants={{
@@ -219,8 +219,8 @@ function ShopContent() {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
             >
               {products?.map((product: any) => (
-                <motion.div 
-                  key={product._id} 
+                <motion.div
+                  key={product._id}
                   variants={{
                     hidden: { opacity: 0, y: 30 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] } }
@@ -230,11 +230,10 @@ function ShopContent() {
                     <div className="relative w-full aspect-[3/4] overflow-hidden rounded-none bg-transparent">
                       <WishlistButton product={product} />
                       {product.images?.[0] ? (
-                        <Image
-                          src={`http://localhost:5000${product.images[0]}`}
+                        <img
+                          src={getImageUrl(product.images[0])}
                           alt={product.name}
-                          fill
-                          className="object-cover object-center group-hover:scale-[1.05] transition-transform duration-[1.5s] ease-[0.21,0.47,0.32,0.98]"
+                          className="w-full h-full object-cover object-center group-hover:scale-[1.05] transition-transform duration-[1.5s] ease-[0.21,0.47,0.32,0.98]"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs uppercase tracking-luxury">No Image</div>
@@ -268,7 +267,7 @@ function ShopContent() {
                 </motion.div>
               ))}
             </motion.div>
-            
+
             {/* Infinite Scroll Trigger */}
             <div ref={observerTarget} className="w-full h-20 flex items-center justify-center mt-8">
               {isFetchingNextPage && (

@@ -32,6 +32,8 @@ backend/uploads/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+backend/persistence_audit.log
+*.log
 
 # TS
 *.tsbuildinfo

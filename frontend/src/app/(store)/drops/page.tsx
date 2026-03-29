@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { getImageUrl } from '@/lib/imageUrl';
 import api from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -67,7 +68,7 @@ export default function DropsPage() {
   });
 
   return (
-    <div className="pt-24 pb-32">
+    <div className="pt-40 pb-32">
       <div className="container mx-auto px-6 max-w-7xl border-b border-border/50 pb-12 mb-16 text-center">
         <h1 className="text-4xl md:text-5xl font-serif tracking-[0.05em] uppercase mb-4">Limited Drops</h1>
         <p className="text-muted-foreground text-sm font-light max-w-2xl mx-auto uppercase tracking-widest">
@@ -106,23 +107,22 @@ export default function DropsPage() {
               return (
                 <div key={drop._id} className="group relative">
                   <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-                    
+
                     {/* Image Area */}
                     <div className="w-full lg:w-1/2 relative aspect-[4/3] rounded-3xl overflow-hidden bg-card shadow-2xl shadow-black/50">
                       {drop.image ? (
-                        <Image src={`http://localhost:5000${drop.image}`} alt={drop.title} fill className="object-cover object-center group-hover:scale-105 transition-transform duration-1000" />
+                        <img src={getImageUrl(drop.image)} alt={drop.title} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground font-serif text-2xl">KORA DROP X1</div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent"></div>
-                      
+
                       {/* Status Badge */}
                       <div className="absolute top-6 left-6">
-                        <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-full backdrop-blur-md ${
-                          isActive ? 'bg-primary/90 text-primary-foreground animate-pulse' : 
-                          isUpcoming ? 'bg-card/80 text-foreground border border-border' : 
-                          'bg-destructive/80 text-destructive-foreground'
-                        }`}>
+                        <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-full backdrop-blur-md ${isActive ? 'bg-primary/90 text-primary-foreground animate-pulse' :
+                            isUpcoming ? 'bg-card/80 text-foreground border border-border' :
+                              'bg-destructive/80 text-destructive-foreground'
+                          }`}>
                           {isActive ? 'Live Now' : isUpcoming ? 'Upcoming' : 'Ended'}
                         </div>
                       </div>
@@ -134,7 +134,7 @@ export default function DropsPage() {
                       <p className="text-lg text-muted-foreground font-light mb-10 leading-relaxed max-w-xl">
                         {drop.description}
                       </p>
-                      
+
                       {isUpcoming ? (
                         <div className="mb-10 w-full flex flex-col items-center lg:items-start">
                           <p className="uppercase tracking-[0.2em] text-xs font-bold mb-4 text-primary">Unlocking In</p>
@@ -158,7 +158,7 @@ export default function DropsPage() {
                           {drop.products?.slice(0, 3).map((prod: any) => (
                             <Link key={prod._id} href={`/shop/${prod.slug}`} className={`flex items-center gap-4 group/item ${!isActive && 'opacity-60 pointer-events-none'}`}>
                               <div className="w-12 h-16 relative rounded bg-card overflow-hidden">
-                                {prod.images?.[0] && <Image src={`http://localhost:5000${prod.images[0]}`} alt={prod.name} fill className="object-cover group-hover/item:scale-110 transition-transform" />}
+                                {prod.images?.[0] && <Image src={getImageUrl(prod.images[0])} alt={prod.name} fill className="object-cover group-hover/item:scale-110 transition-transform" />}
                               </div>
                               <div className="flex-1">
                                 <p className="text-sm font-medium line-clamp-1">{prod.name}</p>

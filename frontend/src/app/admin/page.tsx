@@ -120,10 +120,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex flex-col gap-8 max-w-[1600px] mx-auto">
-      <div>
-        <h1 className="text-3xl font-serif font-bold tracking-tight mb-2">Dashboard Operations</h1>
-        <p className="text-muted-foreground text-sm">Real-time metrics, analytics, and sales velocity tracking.</p>
+    <div className="flex flex-col gap-6 max-w-[1600px] mx-auto pt-6">
+      <div className="mb-2">
+        <h1 className="text-3xl font-serif font-bold tracking-tight mb-1">Dashboard Operations</h1>
+        <p className="text-muted-foreground text-xs font-medium">Real-time metrics, analytics, and sales velocity tracking.</p>
       </div>
 
       {/* KPI Cards */}
@@ -257,7 +257,7 @@ export default function AdminDashboard() {
                    <tr key={order._id} className="hover:bg-muted/20 transition-colors">
                      <td className="px-6 py-4 font-mono text-xs">{order._id.substring(order._id.length - 8)}</td>
                      <td className="px-6 py-4">{order.user?.name || 'Guest'}</td>
-                     <td className="px-6 py-4 text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</td>
+                     <td suppressHydrationWarning className="px-6 py-4 text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</td>
                      <td className="px-6 py-4 font-medium">₹{order.total}</td>
                      <td className="px-6 py-4">
                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${

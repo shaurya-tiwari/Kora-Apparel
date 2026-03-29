@@ -3,17 +3,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { getImageUrl } from '@/lib/imageUrl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2, Edit2, Play, Image as ImageIcon, ToggleLeft, ToggleRight } from 'lucide-react';
-import Image from 'next/image';
 
 export default function AdminBanners() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [currentBanner, setCurrentBanner] = useState<any>(null);
-  
+
   // Form State
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -34,13 +34,9 @@ export default function AdminBanners() {
   const saveMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       if (currentBanner?._id) {
-        return api.put(`/banners/${currentBanner._id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        return api.put(`/banners/${currentBanner._id}`, formData);
       }
-      return api.post('/banners', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      return api.post('/banners', formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-banners'] });
@@ -61,7 +57,7 @@ export default function AdminBanners() {
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: async ({ id, active }: { id: string, active: boolean }) => 
+    mutationFn: async ({ id, active }: { id: string, active: boolean }) =>
       api.put(`/banners/${id}`, { isActive: active }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-banners'] });
@@ -93,7 +89,7 @@ export default function AdminBanners() {
     setCtaLink(banner.ctaLink);
     setIsActive(banner.isActive);
     setImageFile(null);
-    setPreview(banner.image ? `http://localhost:5000${banner.image}` : '');
+    setPreview(banner.image ? getImageUrl(banner.image) : '');
     setIsEditing(true);
   };
 
@@ -174,7 +170,7 @@ export default function AdminBanners() {
               <div className="border border-dashed border-border rounded-xl h-48 flex flex-col items-center justify-center relative overflow-hidden bg-background">
                 {preview ? (
                   <>
-                    <Image src={preview} alt="Preview" fill className="object-cover opacity-60" />
+                    <img src={preview} alt="Preview" className="w-full h-full object-cover opacity-60" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Button type="button" variant="secondary" onClick={() => document.getElementById('banner-img')?.click()} className="backdrop-blur-md bg-background/50 z-10">
                         Change Image
@@ -203,15 +199,15 @@ export default function AdminBanners() {
             Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-48 bg-card rounded-xl animate-pulse" />)
           ) : banners?.length === 0 ? (
             <div className="col-span-full text-center py-20 border border-dashed border-border rounded-xl">
-               <p className="text-muted-foreground">No banners created yet.</p>
-               <Button variant="outline" className="mt-4" onClick={() => setIsEditing(true)}>Create First Banner</Button>
+              <p className="text-muted-foreground">No banners created yet.</p>
+              <Button variant="outline" className="mt-4" onClick={() => setIsEditing(true)}>Create First Banner</Button>
             </div>
           ) : (
             banners?.map((banner: any) => (
               <div key={banner._id} className={`flex flex-col border rounded-xl overflow-hidden bg-card ${banner.isActive ? 'border-primary shadow-[0_0_15px_rgba(196,106,60,0.15)] scale-[1.02] transition-transform' : 'border-border'}`}>
                 <div className="h-32 relative bg-muted flex items-center justify-center">
                   {banner.image ? (
-                    <Image src={`http://localhost:5000${banner.image}`} alt={banner.title} fill className="object-cover" />
+                    <img src={getImageUrl(banner.image)} alt={banner.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-tr from-background to-primary/10" />
                   )}
@@ -224,7 +220,7 @@ export default function AdminBanners() {
                 <div className="p-5 flex-1 flex flex-col">
                   <h3 className="font-serif font-bold text-lg line-clamp-1">{banner.title}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-1 mb-4">{banner.subtitle || 'No subtitle'}</p>
-                  
+
                   <div className="flex gap-2 mt-auto pt-4 border-t border-border">
                     <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(banner)}>
                       <Edit2 className="w-4 h-4 mr-2" /> Edit

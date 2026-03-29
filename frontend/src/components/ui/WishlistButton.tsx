@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import api from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
 import { Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 export function WishlistButton({ product, className = '' }: { product: any, className?: string }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { items, setWishlist } = useWishlistStore();
   const [loading, setLoading] = useState(false);
@@ -21,26 +23,23 @@ export function WishlistButton({ product, className = '' }: { product: any, clas
     e.stopPropagation();
 
     if (!user) {
-      toast.error('Please log in to save items to your wishlist.');
+      toast.error('Identity required to save to collection');
       router.push('/account?tab=login');
       return;
     }
 
     setLoading(true);
     try {
-      // Optimistic update
-      const newItems = isLiked 
-        ? items.filter(i => (i._id || i) !== product._id)
-        : [...items, product];
-      setWishlist(newItems);
-
-      // Backend sync
       const { data } = await api.put('/auth/me/wishlist', { productId: product._id });
       setWishlist(data.wishlist);
       
-      if (!isLiked) toast.success(`${product.name} saved to wishlist!`);
+      // Force React Query sync for Account Dashboard
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      
+      if (!isLiked) toast.success(`Saved to collection`);
+      else toast.info(`Removed from collection`);
     } catch (err) {
-      toast.error('Failed to update wishlist');
+      toast.error('Sync failed');
     } finally {
       setLoading(false);
     }

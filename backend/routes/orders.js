@@ -10,6 +10,7 @@ const Setting = require('../models/Setting');
 const Notification = require('../models/Notification');
 const { protect, adminOnly } = require('../middleware/auth');
 const sendEmail = require('../utils/sendEmail');
+const { adjustStock } = require('../utils/stockManager');
 
 // @POST /api/orders/create-razorpay-order
 router.post('/create-razorpay-order', protect, async (req, res, next) => {
@@ -40,7 +41,8 @@ router.post('/create-razorpay-order', protect, async (req, res, next) => {
     const rzpKeySecret = settings?.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET;
 
     if (!rzpKeyId || !rzpKeySecret) {
-      return res.status(500).json({ message: 'Payment gateway is not configured.' });
+      console.error('Razorpay Error: Key ID or Secret missing in settings/env');
+      return res.status(500).json({ message: 'Payment gateway is not configured on the server side.' });
     }
 
     const razorpay = new Razorpay({ key_id: rzpKeyId, key_secret: rzpKeySecret });
@@ -50,8 +52,102 @@ router.post('/create-razorpay-order', protect, async (req, res, next) => {
       currency: 'INR',
       receipt: `kora_${Date.now()}`,
     };
-    const razorpayOrder = await razorpay.orders.create(options);
-    res.json({ orderId: razorpayOrder.id, amount: razorpayOrder.amount, currency: razorpayOrder.currency });
+    
+    try {
+      const razorpayOrder = await razorpay.orders.create(options);
+      res.json({ orderId: razorpayOrder.id, amount: razorpayOrder.amount, currency: razorpayOrder.currency });
+    } catch (rzpErr) {
+      console.error('Razorpay Order Creation Failed:', rzpErr);
+      res.status(500).json({ message: 'Failed to initialize payment with Razorpay. Please try again later.' });
+    }
+  } catch (err) { next(err); }
+});
+
+// @POST /api/orders/place-cod-order
+router.post('/place-cod-order', protect, async (req, res, next) => {
+  try {
+    const { items, shippingAddress, itemsTotal, shippingCost, total, couponCode, discountAmount } = req.body;
+
+    const settings = await Setting.findOne();
+    if (!settings?.isCodEnabled) {
+      return res.status(400).json({ message: 'Cash on Delivery is currently disabled.' });
+    }
+
+    // 1. Stock Validation
+    if (!items || items.length === 0) return res.status(400).json({ message: 'Cart is empty' });
+    
+    for (const item of items) {
+      const product = await Product.findById(item.product);
+      if (!product) return res.status(400).json({ message: `Product ${item.name} no longer exists.` });
+      
+      let availableStock = product.stock;
+      if (product.variants && product.variants.length > 0) {
+        const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+        availableStock = variant ? variant.stock : product.stock;
+      }
+
+      if (availableStock < item.qty) {
+        return res.status(400).json({ message: `Insufficient stock for ${item.name}. Only ${availableStock} left.` });
+      }
+    }
+
+    // 2. Create Order
+    const order = await Order.create({
+      user: req.user._id,
+      items,
+      shippingAddress,
+      itemsTotal,
+      shippingCost,
+      total,
+      couponCode,
+      discountAmount,
+      paymentMethod: 'cod',
+      isPaid: false,
+      status: 'pending',
+    });
+
+    // 3. Deduct Stock
+    await adjustStock(order.items, 'deduct');
+
+    // 4. Update Coupon if used
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
+      if (coupon) {
+        coupon.usedCount += 1;
+        await coupon.save();
+      }
+    }
+
+    // 5. Update User Stats
+    await User.findByIdAndUpdate(req.user._id, { $inc: { totalSpend: order.total } });
+
+    // 6. Notifications
+    await Notification.create({
+      title: 'New COD Order',
+      message: `New Cash on Delivery order #${order._id.toString().slice(-6)} Received!`,
+      type: 'order',
+      link: '/admin/orders'
+    });
+
+    // 7. Confirmation Email
+    try {
+      if (req.user.email) {
+        await sendEmail({
+          email: req.user.email,
+          subject: 'Kora Apparel - COD Order Confirmation',
+          message: `Your Order #${order._id} has been placed via Cash on Delivery. Content: ₹${order.total}.`,
+          html: `<div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
+            <h2 style="color: #C46A3C;">KORA APPAREL</h2>
+            <p>Your COD order has been received successfully!</p>
+            <p><strong>Order ID:</strong> #${order._id}</p>
+            <p><strong>Total:</strong> ₹${order.total}</p>
+            <p>Payment will be collected at delivery.</p>
+          </div>`
+        });
+      }
+    } catch (e) {}
+
+    res.status(201).json({ message: 'Order placed successfully (COD)', order });
   } catch (err) { next(err); }
 });
 
@@ -87,37 +183,7 @@ router.post('/verify-payment', protect, async (req, res, next) => {
     });
 
     // Deduct exact stock
-    for (const item of order.items) {
-      const product = await Product.findById(item.product);
-      if (product) {
-        let variantUpdated = false;
-        let newStockLevel = 0;
-        if (product.variants && product.variants.length > 0) {
-          const variantIdx = product.variants.findIndex(v => v.size === item.size && v.color === item.color);
-          if (variantIdx !== -1) {
-            product.variants[variantIdx].stock = Math.max(0, product.variants[variantIdx].stock - item.qty);
-            newStockLevel = product.variants[variantIdx].stock;
-            variantUpdated = true;
-          }
-        }
-        
-        // Deduct from global stock regardless, as a master tally
-        product.stock = Math.max(0, product.stock - item.qty);
-        if (!variantUpdated) newStockLevel = product.stock;
-        
-        await product.save();
-
-        // Low stock notification
-        if (newStockLevel <= 5) {
-          await Notification.create({
-            title: 'Low Stock Alert',
-            message: `${product.name} ${item.size ? `(${item.size} ${item.color})` : ''} has dropped to ${newStockLevel} units!`,
-            type: 'stock',
-            link: '/admin/inventory'
-          });
-        }
-      }
-    }
+    await adjustStock(order.items, 'deduct');
 
     if (order.couponCode) {
       const coupon = await Coupon.findOne({ code: order.couponCode.toUpperCase() });
@@ -171,8 +237,18 @@ router.post('/verify-payment', protect, async (req, res, next) => {
 // @GET /api/orders/my
 router.get('/my', protect, async (req, res, next) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 }).populate('items.product', 'name images');
-    res.json(orders);
+    const { page = 1, limit = 20 } = req.query;
+    const [orders, total] = await Promise.all([
+      Order.find({ user: req.user._id })
+        .sort({ createdAt: -1 })
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .populate('items.product', 'name images'),
+      Order.countDocuments({ user: req.user._id })
+    ]);
+    
+    console.log(`[DEBUG] /orders/my found ${orders.length} orders for ${req.user.email}`);
+    res.json({ orders, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
   } catch (err) { next(err); }
 });
 
@@ -189,24 +265,8 @@ router.put('/:id/cancel', protect, async (req, res, next) => {
     order.status = 'cancelled';
     await order.save();
 
-    // Mathematically restore exact stock levels across variations
-    for (const item of order.items) {
-      const product = await Product.findById(item.product);
-      if (product) {
-        let variantUpdated = false;
-        if (product.variants && product.variants.length > 0) {
-          const variantIdx = product.variants.findIndex(v => v.size === item.size && v.color === item.color);
-          if (variantIdx !== -1) {
-            product.variants[variantIdx].stock += item.qty;
-            variantUpdated = true;
-          }
-        }
-        
-        // Restore global stock sum
-        product.stock += item.qty;
-        await product.save();
-      }
-    }
+    // Restore exact stock levels
+    await adjustStock(order.items, 'restore');
 
     // Optionally notify admin
     await Notification.create({
@@ -231,6 +291,7 @@ router.get('/', protect, adminOnly, async (req, res, next) => {
         .populate('user', 'name email'),
       Order.countDocuments(query),
     ]);
+    console.log(`[DEBUG] Fetching orders for user ${req.user._id}. Found: ${orders.length}`);
     res.json({ orders, total, page: Number(page), pages: Math.ceil(total / limit) });
   } catch (err) { next(err); }
 });
@@ -239,8 +300,35 @@ router.get('/', protect, adminOnly, async (req, res, next) => {
 router.put('/:id/status', protect, adminOnly, async (req, res, next) => {
   try {
     const { status } = req.body;
-    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    const oldStatus = order.status;
+    const newStatus = status;
+
+    if (oldStatus === newStatus) return res.json(order);
+    if (oldStatus === 'cancelled') return res.status(400).json({ message: 'Cancelled orders are terminal and cannot be modified.' });
+
+    // 1. Stock Reconciliation
+    if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
+       await adjustStock(order.items, 'restore');
+    } else if (oldStatus === 'cancelled' && newStatus !== 'cancelled') {
+       // Validate stock first (manual logic remains as it needs validation check)
+       for (const item of order.items) {
+          const product = await Product.findById(item.product);
+          if (!product) return res.status(400).json({ message: `Product ${item.name} no longer exists.` });
+          let available = product.stock;
+          if (product.variants && product.variants.length > 0) {
+             const v = product.variants.find(v => v.size === item.size && v.color === item.color);
+             available = v ? v.stock : product.stock;
+          }
+          if (available < item.qty) return res.status(400).json({ message: `Insufficient stock to restore order for ${item.name}` });
+       }
+       await adjustStock(order.items, 'deduct');
+    }
+
+    order.status = newStatus;
+    await order.save();
     res.json(order);
   } catch (err) { next(err); }
 });
@@ -271,6 +359,24 @@ router.get('/export', protect, adminOnly, async (req, res, next) => {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="kora-orders-${Date.now()}.csv"`);
     res.send(csv);
+  } catch (err) { next(err); }
+});
+
+// @GET /api/orders/:id
+router.get('/:id', protect, async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('items.product', 'name images slug')
+      .populate('user', 'name email');
+      
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    
+    // Authorization check: Only owner or admin can see it
+    if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to view this order' });
+    }
+    
+    res.json(order);
   } catch (err) { next(err); }
 });
 

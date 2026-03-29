@@ -20,6 +20,7 @@ router.post('/validate', async (req, res, next) => {
     if (!coupon) return res.status(404).json({ message: 'Invalid or inactive coupon' });
     if (new Date() > new Date(coupon.expiryDate)) return res.status(400).json({ message: 'Coupon expired' });
     if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) return res.status(400).json({ message: 'Coupon usage limit reached' });
+    if (subtotal < coupon.minPurchase) return res.status(400).json({ message: `Minimum purchase amount for this coupon is ₹${coupon.minPurchase}` });
 
     let discountAmount = 0;
     if (coupon.discountType === 'percentage') {

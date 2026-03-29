@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { getImageUrl } from '@/lib/imageUrl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PackageOpen, AlertCircle, Save } from 'lucide-react';
-import Image from 'next/image';
 
 export default function InventorySystem() {
   const queryClient = useQueryClient();
@@ -105,7 +105,7 @@ export default function InventorySystem() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-md bg-muted relative overflow-hidden flex-shrink-0">
                             {product.images?.[0] ? (
-                              <Image src={`http://localhost:5000${product.images[0]}`} alt={product.name} fill className="object-cover" />
+                              <img src={getImageUrl(product.images[0])} alt={product.name} className="w-full h-full object-cover" />
                             ) : (
                               <PackageOpen className="w-4 h-4 m-auto text-muted-foreground" />
                             )}
@@ -125,8 +125,8 @@ export default function InventorySystem() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <Input 
-                          type="number" 
+                        <Input
+                          type="number"
                           min="0"
                           value={currentInput}
                           onChange={(e) => handleStockChange(product._id, e.target.value)}
@@ -134,8 +134,8 @@ export default function InventorySystem() {
                         />
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant={isModified ? 'default' : 'ghost'}
                           disabled={!isModified || updateMutation.isPending}
                           onClick={() => saveProductStock(product._id)}

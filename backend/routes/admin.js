@@ -10,10 +10,10 @@ const { protect, adminOnly } = require('../middleware/auth');
 router.get('/stats', protect, adminOnly, async (req, res, next) => {
   try {
     const [totalOrders, totalUsers, totalProducts, revenueData, pendingOrders] = await Promise.all([
-      Order.countDocuments({ isPaid: true }),
+      Order.countDocuments({ status: { $ne: 'cancelled' } }),
       User.countDocuments({ role: 'user' }),
       Product.countDocuments(),
-      Order.aggregate([{ $match: { isPaid: true } }, { $group: { _id: null, total: { $sum: '$total' } } }]),
+      Order.aggregate([{ $match: { status: { $ne: 'cancelled' } } }, { $group: { _id: null, total: { $sum: '$total' } } }]),
       Order.countDocuments({ status: 'pending' }),
     ]);
 
@@ -31,66 +31,73 @@ router.get('/stats', protect, adminOnly, async (req, res, next) => {
 // @GET /api/admin/analytics
 router.get('/analytics', protect, adminOnly, async (req, res, next) => {
   try {
-    // Sales by last 7 months
-    const sevenMonthsAgo = new Date();
-    sevenMonthsAgo.setMonth(sevenMonthsAgo.getMonth() - 6);
-
-    const monthlySales = await Order.aggregate([
-      { $match: { isPaid: true, createdAt: { $gte: sevenMonthsAgo } } },
-      {
-        $group: {
-          _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
-          revenue: { $sum: '$total' },
-          orders: { $sum: 1 },
-        },
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } },
-    ]);
-
-    // Top products by revenue
-    const topProducts = await Order.aggregate([
-      { $match: { isPaid: true } },
-      { $unwind: '$items' },
-      {
-        $group: {
-          _id: '$items.product',
-          name: { $first: '$items.name' },
-          totalSold: { $sum: '$items.qty' },
-          totalRevenue: { $sum: { $multiply: ['$items.price', '$items.qty'] } },
-        },
-      },
-      { $sort: { totalRevenue: -1 } },
-      { $limit: 8 },
-    ]);
-
-    // Orders vs Revenue Bar Chart Data (Orders by day/month)
-    // Category distribution for Pie Chart
-    const categoryDistribution = await Product.aggregate([
-      {
-        $group: {
-          _id: '$category',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-
-    // Daily sales last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const salesByDay = await Order.aggregate([
-      { $match: { isPaid: true, createdAt: { $gte: thirtyDaysAgo } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-          totalSales: { $sum: '$total' },
-          count: { $sum: 1 },
+    const sevenMonthsAgo = new Date();
+    sevenMonthsAgo.setMonth(sevenMonthsAgo.getMonth() - 6);
+
+    const [monthlySales, topProducts, categoryDistribution, salesByDay] = await Promise.all([
+      Order.aggregate([
+        { $match: { isPaid: true, status: { $ne: 'cancelled' }, createdAt: { $gte: sevenMonthsAgo } } },
+        {
+          $group: {
+            _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
+            revenue: { $sum: '$total' },
+            orders: { $sum: 1 },
+          },
         },
-      },
-      { $sort: { _id: 1 } },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
+      ]),
+      Order.aggregate([
+        { $match: { isPaid: true, status: { $ne: 'cancelled' } } },
+        { $unwind: '$items' },
+        {
+          $group: {
+            _id: '$items.product',
+            name: { $first: '$items.name' },
+            totalSold: { $sum: '$items.qty' },
+            totalRevenue: { $sum: { $multiply: ['$items.price', '$items.qty'] } },
+          },
+        },
+        { $sort: { totalRevenue: -1 } },
+        { $limit: 10 },
+        {
+          $lookup: {
+            from: 'products',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'productInfo',
+          },
+        },
+      ]),
+      Product.aggregate([
+        {
+          $group: {
+            _id: '$category',
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+      Order.aggregate([
+        { $match: { isPaid: true, status: { $ne: 'cancelled' }, createdAt: { $gte: thirtyDaysAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%m-%d', date: '$createdAt' } },
+            totalSales: { $sum: '$total' },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ])
     ]);
 
-    res.json({ monthlySales, topProducts, categoryDistribution, salesByDay });
+    res.json({ 
+      monthlySales: monthlySales || [], 
+      topProducts: topProducts || [], 
+      categoryDistribution: categoryDistribution || [], 
+      salesByDay: salesByDay || [],
+    });
   } catch (err) { next(err); }
 });
 
@@ -101,7 +108,7 @@ router.get('/customers', protect, adminOnly, async (req, res, next) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const customers = await Order.aggregate([
-      { $match: { isPaid: true } },
+      { $match: { isPaid: true, status: { $ne: 'cancelled' } } },
       {
         $group: {
           _id: '$user',
@@ -154,12 +161,33 @@ router.get('/page-builder', protect, adminOnly, async (req, res, next) => {
 // @PUT /api/admin/page-builder
 router.put('/page-builder', protect, adminOnly, async (req, res, next) => {
   try {
-    let settings = await Setting.findOne();
-    if (!settings) settings = await Setting.create({});
-    settings.pageSections = req.body.pageSections;
-    await settings.save();
-    res.json({ pageSections: settings.pageSections });
-  } catch (err) { next(err); }
+    let pageSections = req.body.pageSections;
+    
+    // Clean up pageSections to prevent Mongoose casting errors (e.g., stripping 'temp-*' IDs)
+    if (pageSections && Array.isArray(pageSections)) {
+      pageSections = pageSections.map(s => {
+        if (typeof s._id === 'string' && !/^[0-9a-fA-F]{24}$/.test(s._id)) {
+          const { _id, ...rest } = s;
+          return rest;
+        }
+        return s;
+      });
+    }
+
+    const updatedSettings = await Setting.findOneAndUpdate(
+      {},
+      { $set: { pageSections } },
+      { new: true, upsert: true, runValidators: false, lean: true }
+    );
+
+    res.json({ pageSections: updatedSettings?.pageSections || [] });
+  } catch (err) { 
+    console.error('PAGE_BUILDER_UPDATE_ERROR:', err);
+    res.status(500).json({ 
+      message: 'Internal Server Error during page builder update', 
+      error: err.message 
+    });
+  }
 });
 
 module.exports = router;

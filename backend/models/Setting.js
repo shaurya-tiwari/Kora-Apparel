@@ -9,7 +9,7 @@ const menuItemSchema = new mongoose.Schema({
 }, { _id: true });
 
 const settingSchema = new mongoose.Schema({
-  brandName: { type: String, default: 'Kora Apparel' },
+  logo: { type: String, default: '' },
   razorpayKeyId: { type: String, default: '' },
   razorpayKeySecret: { type: String, default: '' },
   socialLinks: {
@@ -17,6 +17,10 @@ const settingSchema = new mongoose.Schema({
     twitter: { type: String, default: '' },
     facebook: { type: String, default: '' },
   },
+  contactEmail: { type: String, default: 'support@koraapparel.com' },
+  contactPhone: { type: String, default: '+91 00000 00000' },
+  contactAddress: { type: String, default: 'New Delhi, India' },
+  brandDescription: { type: String, default: 'Redefining essentials with purpose. Premium, sustainable, and minimal.' },
   shippingThreshold: { type: Number, default: 5000 },
   shippingCharge: { type: Number, default: 100 },
   taxRate: { type: Number, default: 18 },
@@ -43,31 +47,37 @@ const settingSchema = new mongoose.Schema({
   gtmEnabled: { type: Boolean, default: false },
 
   // ─── Dynamic Navigation ────────────────────────────────────────
-  navMenuItems: { type: [menuItemSchema], default: [
-    { label: 'Shop All', href: '/shop', isVisible: true, openInNewTab: false, sortOrder: 0 },
-    { label: 'Drops', href: '/drops', isVisible: true, openInNewTab: false, sortOrder: 1 },
-    { label: 'About', href: '/about', isVisible: true, openInNewTab: false, sortOrder: 2 },
-  ]},
-  footerMenuItems: { type: [menuItemSchema], default: [
-    { label: 'Shop', href: '/shop', isVisible: true, openInNewTab: false, sortOrder: 0 },
-    { label: 'About', href: '/about', isVisible: true, openInNewTab: false, sortOrder: 1 },
-    { label: 'Contact', href: '/contact', isVisible: true, openInNewTab: false, sortOrder: 2 },
-  ]},
+  navMenuItems: {
+    type: [menuItemSchema], default: [
+      { label: 'Shop All', href: '/shop', isVisible: true, openInNewTab: false, sortOrder: 0 },
+      { label: 'Drops', href: '/drops', isVisible: true, openInNewTab: false, sortOrder: 1 },
+      { label: 'About', href: '/about', isVisible: true, openInNewTab: false, sortOrder: 2 },
+    ]
+  },
+  footerMenuItems: {
+    type: [menuItemSchema], default: [
+      { label: 'Shop', href: '/shop', isVisible: true, openInNewTab: false, sortOrder: 0 },
+      { label: 'About', href: '/about', isVisible: true, openInNewTab: false, sortOrder: 1 },
+      { label: 'Contact', href: '/contact', isVisible: true, openInNewTab: false, sortOrder: 2 },
+    ]
+  },
 
   // ─── Page Builder Sections ─────────────────────────────────────
-  pageSections: { type: [{ 
-    type: { type: String }, 
-    label: String, 
-    isVisible: { type: Boolean, default: true }, 
-    sortOrder: { type: Number, default: 0 },
-    content: { type: mongoose.Schema.Types.Mixed, default: {} }
-  }], default: [
-    { type: 'hero', label: 'Hero Section', isVisible: true, sortOrder: 0, content: {} },
-    { type: 'drops', label: 'Active Drops', isVisible: true, sortOrder: 1, content: {} },
-    { type: 'featured', label: 'Featured Products', isVisible: true, sortOrder: 2, content: {} },
-    { type: 'testimonials', label: 'Testimonials', isVisible: true, sortOrder: 3, content: {} },
-    { type: 'editorial', label: 'Editorial / Philosophy', isVisible: true, sortOrder: 4, content: {} },
-  ]},
+  pageSections: {
+    type: [{
+      type: { type: String },
+      label: String,
+      isVisible: { type: Boolean, default: true },
+      sortOrder: { type: Number, default: 0 },
+      content: { type: mongoose.Schema.Types.Mixed, default: {} }
+    }], default: [
+      { type: 'hero', label: 'Hero Section', isVisible: true, sortOrder: 0, content: {} },
+      { type: 'drops', label: 'Active Drops', isVisible: true, sortOrder: 1, content: {} },
+      { type: 'featured', label: 'Featured Products', isVisible: true, sortOrder: 2, content: {} },
+      { type: 'testimonials', label: 'Testimonials', isVisible: true, sortOrder: 3, content: {} },
+      { type: 'editorial', label: 'Editorial / Philosophy', isVisible: true, sortOrder: 4, content: {} },
+    ]
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Setting', settingSchema);

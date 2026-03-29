@@ -6,7 +6,7 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Ticket, Plus, Trash2, Edit2, Play, CircleSlash, Percent, IndianRupee } from 'lucide-react';
+import { Ticket, Plus, Trash2, Edit2, Play, CircleSlash, Percent, IndianRupee, ShoppingCart } from 'lucide-react';
 
 export default function MarketingAdmin() {
   const queryClient = useQueryClient();
@@ -19,6 +19,7 @@ export default function MarketingAdmin() {
   const [discountValue, setDiscountValue] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [usageLimit, setUsageLimit] = useState('0');
+  const [minPurchase, setMinPurchase] = useState('0');
   const [isActive, setIsActive] = useState(true);
 
   const { data: coupons, isLoading } = useQuery({
@@ -72,6 +73,7 @@ export default function MarketingAdmin() {
     setDiscountValue('');
     setExpiryDate('');
     setUsageLimit('0');
+    setMinPurchase('0');
     setIsActive(true);
   };
 
@@ -82,6 +84,7 @@ export default function MarketingAdmin() {
     setDiscountValue(coupon.discountValue.toString());
     setExpiryDate(new Date(coupon.expiryDate).toISOString().split('T')[0]);
     setUsageLimit(coupon.usageLimit.toString());
+    setMinPurchase((coupon.minPurchase || 0).toString());
     setIsActive(coupon.isActive);
     setIsEditing(true);
   };
@@ -94,6 +97,7 @@ export default function MarketingAdmin() {
       discountValue: Number(discountValue),
       expiryDate,
       usageLimit: Number(usageLimit),
+      minPurchase: Number(minPurchase),
       isActive
     });
   };
@@ -115,71 +119,78 @@ export default function MarketingAdmin() {
       </div>
 
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="bg-card border border-border p-6 rounded-xl flex flex-col gap-6 max-w-2xl">
-          <div className="flex justify-between items-center border-b border-border pb-4">
-            <h2 className="text-xl font-serif font-semibold">{currentCoupon ? 'Edit Coupon' : 'New Coupon'}</h2>
-            <Button type="button" variant="ghost" onClick={resetForm}>Cancel</Button>
+        <form onSubmit={handleSubmit} className="bg-card border border-border p-8 rounded-2xl flex flex-col gap-8 max-w-3xl shadow-2xl">
+          <div className="flex justify-between items-center border-b border-border pb-6">
+            <h2 className="text-2xl font-serif font-semibold">{currentCoupon ? 'Edit Coupon' : 'New Strategic Coupon'}</h2>
+            <Button type="button" variant="ghost" onClick={resetForm} className="text-muted-foreground">Cancel</Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 block">Coupon Code</label>
-              <Input required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. SUMMER26" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 block">Expiry Date</label>
-              <Input type="date" required value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Strategy Code</label>
+              <Input required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. LUXURY2026" className="h-12 border-border focus:border-primary text-lg font-mono font-bold tracking-widest" />
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 block">Discount Type</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Discount Protocol</label>
               <select 
                 value={discountType} 
                 onChange={(e) => setDiscountType(e.target.value)}
-                className="w-full h-10 px-3 rounded-md bg-background border border-border text-sm focus:border-primary outline-none"
+                className="w-full h-12 px-4 rounded-md bg-background border border-border text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer"
               >
-                <option value="percentage">Percentage (%)</option>
-                <option value="flat">Flat Amount (₹)</option>
+                <option value="percentage">Percentage Reduction (%)</option>
+                <option value="flat">Fixed Credit Removal (₹)</option>
               </select>
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 block flex items-center gap-2">
-                Discount Value {discountType === 'percentage' ? <Percent className="w-3 h-3"/> : <IndianRupee className="w-3 h-3"/>}
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block flex items-center gap-2">
+                Intensity Value {discountType === 'percentage' ? <Percent className="w-3 h-3"/> : <IndianRupee className="w-3 h-3"/>}
               </label>
-              <Input type="number" required min="1" max={discountType === 'percentage' ? 100 : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
+              <Input type="number" required min="1" max={discountType === 'percentage' ? 100 : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="h-12 border-border focus:border-primary font-bold" />
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 block">Usage Limit (0 for unlimited)</label>
-              <Input type="number" min="0" required value={usageLimit} onChange={(e) => setUsageLimit(e.target.value)} />
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Minimum Entry Value (₹)</label>
+              <Input type="number" min="0" required value={minPurchase} onChange={(e) => setMinPurchase(e.target.value)} className="h-12 border-border focus:border-primary font-bold" />
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 block">Status</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Global Usage Limit (0=∞)</label>
+              <Input type="number" min="0" required value={usageLimit} onChange={(e) => setUsageLimit(e.target.value)} className="h-12 border-border focus:border-primary font-bold" />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Terminates On</label>
+              <Input type="date" required value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="h-12 border-border focus:border-primary font-bold" />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Activation Status</label>
               <select 
                 value={isActive.toString()} 
                 onChange={(e) => setIsActive(e.target.value === 'true')}
-                className="w-full h-10 px-3 rounded-md bg-background border border-border text-sm focus:border-primary outline-none"
+                className="w-full h-12 px-4 rounded-md bg-background border border-border text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer"
               >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="true">Live & Operational</option>
+                <option value="false">Vaulted / Inactive</option>
               </select>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-border flex justify-end">
-            <Button type="submit" disabled={saveMutation.isPending} className="px-8">{saveMutation.isPending ? 'Saving...' : 'Save Coupon'}</Button>
+          <div className="pt-8 border-t border-border flex justify-end gap-4">
+             <Button type="button" variant="outline" onClick={resetForm} className="px-8 h-12 uppercase tracking-widest text-[10px] font-black">Discard Changes</Button>
+             <Button type="submit" disabled={saveMutation.isPending} className="px-10 h-12 uppercase tracking-[0.2em] text-[10px] font-black">{saveMutation.isPending ? 'Synchronizing...' : 'Finalize Coupon'}</Button>
           </div>
         </form>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-40 bg-card rounded-xl animate-pulse" />)
+            Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-64 bg-card rounded-2xl animate-pulse" />)
           ) : coupons?.length === 0 ? (
-             <div className="col-span-full text-center py-20 border border-dashed border-border rounded-xl">
-               <p className="text-muted-foreground">No coupons created yet.</p>
-               <Button variant="outline" className="mt-4" onClick={() => setIsEditing(true)}>Create First Coupon</Button>
+             <div className="col-span-full text-center py-20 border-2 border-dashed border-border rounded-2xl bg-muted/10">
+               <p className="text-muted-foreground uppercase tracking-widest font-bold opacity-50">No Active Promotional Protocols Found</p>
+               <Button variant="ghost" className="mt-6 uppercase tracking-[0.2em] text-[10px] font-black hover:bg-primary hover:text-white" onClick={() => setIsEditing(true)}>Initiate First Coupon</Button>
             </div>
           ) : (
             coupons?.map((coupon: any) => {
@@ -188,47 +199,44 @@ export default function MarketingAdmin() {
               const disabled = !coupon.isActive || isExpired || limitReached;
 
               return (
-                <div key={coupon._id} className={`bg-card border rounded-xl p-6 relative overflow-hidden flex flex-col ${disabled ? 'border-border/50 opacity-70' : 'border-primary/50'}`}>
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-2xl font-mono font-bold tracking-wider">{coupon.code}</h3>
-                      <p className="text-sm font-medium text-muted-foreground mt-1">
-                        {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} FLAT OFF`}
-                      </p>
-                    </div>
-                    {coupon.isActive && !isExpired && !limitReached ? (
-                       <div className="bg-primary/10 text-primary p-2 rounded-full"><Play className="w-4 h-4 fill-current"/></div>
-                    ) : (
-                       <div className="bg-muted text-muted-foreground p-2 rounded-full"><CircleSlash className="w-4 h-4"/></div>
-                    )}
+                <div key={coupon._id} className={`bg-card border-2 rounded-2xl p-8 relative overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl ${disabled ? 'border-border/50 opacity-60 grayscale' : 'border-primary/20 shadow-xl'}`}>
+                  
+                  {/* Status Banner */}
+                  <div className={`absolute top-0 right-0 px-4 py-1 text-[8px] font-black uppercase tracking-[0.2em] ${disabled ? 'bg-muted text-muted-foreground' : 'bg-primary text-white'}`}>
+                    {isExpired ? 'Expired' : limitReached ? 'Depleted' : coupon.isActive ? 'Operational' : 'Vaulted'}
                   </div>
 
-                  <div className="space-y-2 mb-6 flex-1 text-xs text-muted-foreground font-mono">
-                    <div className="flex justify-between">
-                      <span>Used:</span>
-                      <span className="text-foreground">{coupon.usedCount} {coupon.usageLimit > 0 ? `/ ${coupon.usageLimit}` : '(Unlimited)'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Expires:</span>
-                      <span className={isExpired ? 'text-destructive font-bold' : 'text-foreground'}>
-                        {new Date(coupon.expiryDate).toLocaleDateString()}
-                      </span>
+                  <div className="mb-6">
+                    <h3 className="text-3xl font-mono font-black tracking-tighter text-foreground">{coupon.code}</h3>
+                    <div className="flex items-center gap-2 mt-2">
+                       <span className="text-xs font-black uppercase tracking-widest text-primary">
+                          {coupon.discountType === 'percentage' ? `${coupon.discountValue}% Reduction` : `₹${coupon.discountValue} Flat Credit`}
+                       </span>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-4 border-t border-border">
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(coupon)}>
-                      <Edit2 className="w-4 h-4 mr-2" /> Edit
+                  <div className="space-y-4 mb-8 flex-1">
+                    <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-muted-foreground/60 border-b border-border/10 pb-2">
+                      <span className="flex items-center gap-2"><ShoppingCart className="w-3 h-3" /> Minimum Entry</span>
+                      <span className="text-foreground font-black">₹{coupon.minPurchase || 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-muted-foreground/60 border-b border-border/10 pb-2">
+                       <span className="flex items-center gap-2"><Plus className="w-3 h-3" /> Displacement</span>
+                       <span className="text-foreground font-black">{coupon.usedCount} {coupon.usageLimit > 0 ? `/ ${coupon.usageLimit}` : '(Unlimited)'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-muted-foreground/60">
+                       <span className="flex items-center gap-2"><CircleSlash className="w-3 h-3" /> Termination</span>
+                       <span className={`font-black ${isExpired ? 'text-destructive' : 'text-foreground'}`}>
+                         {new Date(coupon.expiryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                       </span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-6 border-t border-border mt-auto">
+                    <Button variant="outline" size="sm" className="flex-1 uppercase tracking-widest text-[9px] font-black h-10" onClick={() => handleEdit(coupon)}>
+                       Edit Protocol
                     </Button>
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      className="flex-1" 
-                      onClick={() => toggleStatusMutation.mutate({ id: coupon._id, active: !coupon.isActive })}
-                    >
-                      {coupon.isActive ? 'Deactivate' : 'Activate'}
-                    </Button>
-                    <Button variant="destructive" size="sm" className="px-3" onClick={() => handleDelete(coupon._id)}>
+                    <Button variant="destructive" size="sm" className="px-4 h-10" onClick={() => handleDelete(coupon._id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>

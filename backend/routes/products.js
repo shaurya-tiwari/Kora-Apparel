@@ -57,7 +57,7 @@ router.get('/:slug', async (req, res, next) => {
 
     const product = await Product.findOne({ slug: req.params.slug });
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    
+
     await setCache(cacheKey, product, 900); // 15 mins cache
     res.json(product);
   } catch (err) { next(err); }
@@ -127,39 +127,33 @@ router.put('/:id', protect, adminOnly, upload.array('images', 6), processImages,
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    const fields = ['name', 'description', 'price', 'comparePrice', 'category', 'stock', 'sku', 'isFeatured', 'isTrending', 'isNewArrival', 'isActive', 'discount'];
-    fields.forEach(f => { 
-      if (req.body[f] !== undefined) {
-        if (['isFeatured', 'isTrending', 'isNewArrival', 'isActive'].includes(f)) {
-          product[f] = req.body[f] === 'true' || req.body[f] === true;
-        } else {
-          product[f] = req.body[f];
-        }
-      } 
+    const fields = ['name', 'description', 'price', 'comparePrice', 'category', 'stock', 'sku', 'discount'];
+    fields.forEach(f => {
+      if (req.body[f] !== undefined) product[f] = req.body[f];
     });
+
+    if (req.body.isFeatured !== undefined) product.isFeatured = req.body.isFeatured === 'true' || req.body.isFeatured === true;
+    if (req.body.isTrending !== undefined) product.isTrending = req.body.isTrending === 'true' || req.body.isTrending === true;
+    if (req.body.isNewArrival !== undefined) product.isNewArrival = req.body.isNewArrival === 'true' || req.body.isNewArrival === true;
+    if (req.body.isActive !== undefined) product.isActive = req.body.isActive === 'true' || req.body.isActive === true;
 
     if (req.body.variants) {
       product.variants = typeof req.body.variants === 'string' ? JSON.parse(req.body.variants) : req.body.variants;
     }
 
-    if (req.body.fabricGsm !== undefined || req.body.fabricMaterial !== undefined) {
-      if (!product.fabric) product.fabric = {};
-      if (req.body.fabricGsm !== undefined) product.fabric.gsm = req.body.fabricGsm;
-      if (req.body.fabricMaterial !== undefined) product.fabric.material = req.body.fabricMaterial;
-    }
+    // Explicitly handle clearing arrays when empty string is passed
+    if (req.body.sizes !== undefined) product.sizes = req.body.sizes === '' ? [] : (Array.isArray(req.body.sizes) ? req.body.sizes : req.body.sizes.split(',').map(s => s.trim()));
+    if (req.body.colors !== undefined) product.colors = req.body.colors === '' ? [] : (Array.isArray(req.body.colors) ? req.body.colors : req.body.colors.split(',').map(c => c.trim()));
+    if (req.body.tags !== undefined) product.tags = req.body.tags === '' ? [] : (Array.isArray(req.body.tags) ? req.body.tags : req.body.tags.split(',').map(t => t.trim()));
 
-    if (req.body.sizes) product.sizes = Array.isArray(req.body.sizes) ? req.body.sizes : req.body.sizes.split(',').map(s => s.trim());
-    if (req.body.colors) product.colors = Array.isArray(req.body.colors) ? req.body.colors : req.body.colors.split(',').map(c => c.trim());
-    if (req.body.tags) product.tags = Array.isArray(req.body.tags) ? req.body.tags : req.body.tags.split(',').map(t => t.trim());
-    
-    // Explicitly handle "empty tags" if user clears the input
-    if (req.body.tags === '') product.tags = [];
+    if (req.body.fabricGsm !== undefined && product.fabric) product.fabric.gsm = req.body.fabricGsm;
+    if (req.body.fabricMaterial !== undefined && product.fabric) product.fabric.material = req.body.fabricMaterial;
 
     if (req.processedImages && req.processedImages.length > 0) product.images = [...product.images, ...req.processedImages];
 
     await product.save();
     await invalidateCache(`product:${product.slug}`);
-    
+
     res.json(product);
   } catch (err) { next(err); }
 });
@@ -169,7 +163,7 @@ router.delete('/:id', protect, adminOnly, async (req, res, next) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    
+
     await invalidateCache(`product:${product.slug}`);
     res.json({ message: 'Product deleted' });
   } catch (err) { next(err); }

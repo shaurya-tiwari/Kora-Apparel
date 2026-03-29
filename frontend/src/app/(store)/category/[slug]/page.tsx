@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { getImageUrl } from '@/lib/imageUrl';
 import api from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -63,18 +64,17 @@ export default function CategoryPage() {
   }
 
   return (
-    <div className="pb-32">
+    <div className="pt-40 pb-32">
       {/* Dynamic Header */}
       {categoryLoading ? (
         <div className="w-full h-[40vh] md:h-[50vh] bg-card animate-pulse" />
       ) : (
         <div className="relative w-full h-[40vh] md:h-[50vh] bg-card overflow-hidden border-b border-border flex items-center justify-center">
           {categoryData?.image && (
-            <Image
-              src={`http://localhost:5000${categoryData.image}`}
+            <img
+              src={getImageUrl(categoryData.image)}
               alt={categoryData.name}
-              fill
-              className="object-cover object-center opacity-40 mix-blend-multiply transition-opacity duration-1000"
+              className="absolute inset-0 w-full h-full object-cover object-center opacity-40 mix-blend-multiply transition-opacity duration-1000"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
@@ -134,11 +134,10 @@ export default function CategoryPage() {
                 <div className="relative w-full aspect-[3/4] overflow-hidden rounded-xl bg-card border border-transparent group-hover:border-border transition-colors">
                   <WishlistButton product={product} />
                   {product.images?.[0] ? (
-                    <Image
-                      src={`http://localhost:5000${product.images[0]}`}
+                    <img
+                      src={getImageUrl(product.images[0])}
                       alt={product.name}
-                      fill
-                      className="object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-in-out"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-in-out"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No Image</div>

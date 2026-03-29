@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -23,11 +23,30 @@ export default function AboutPage() {
         </div>
         
         <div className="relative z-10 text-center px-6 max-w-3xl">
-          <span className="text-primary text-xs font-bold tracking-[0.3em] uppercase mb-6 block">Our Story</span>
-          <h1 className="text-5xl md:text-7xl font-serif tracking-[0.05em] uppercase mb-6">Born from Necessity.</h1>
-          <p className="text-sm text-muted-foreground font-light leading-relaxed uppercase tracking-widest">
+          <motion.span 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-primary text-xs font-bold tracking-[0.3em] uppercase mb-6 block"
+          >
+            Our Story
+          </motion.span>
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-5xl md:text-7xl font-serif tracking-[0.05em] uppercase mb-6"
+          >
+            Born from Necessity.
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-sm text-muted-foreground font-light leading-relaxed uppercase tracking-widest"
+          >
             The intersection of minimalism and premium craftsmanship.
-          </p>
+          </motion.p>
         </div>
       </section>
 

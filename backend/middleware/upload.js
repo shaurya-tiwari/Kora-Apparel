@@ -19,13 +19,15 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const processImages = async (req, res, next) => {
-  if (!req.files || req.files.length === 0) return next();
+  const files = req.files ? req.files : (req.file ? [req.file] : []);
+  if (files.length === 0) return next();
+
   try {
     const uploadsDir = path.join(__dirname, '../uploads');
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
     const filenames = [];
-    for (const file of req.files) {
+    for (const file of files) {
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.webp`;
       await sharp(file.buffer)
         .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
