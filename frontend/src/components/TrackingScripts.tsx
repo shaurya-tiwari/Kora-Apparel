@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 
@@ -27,7 +29,7 @@ export default function TrackingScripts() {
     <>
       {/* ── Facebook Pixel ── */}
       {fbPixelEnabled && fbPixelId && (
-        <>
+        <React.Fragment key="fb-pixel">
           <script
             dangerouslySetInnerHTML={{
               __html: `
@@ -53,12 +55,12 @@ export default function TrackingScripts() {
               alt=""
             />
           </noscript>
-        </>
+        </React.Fragment>
       )}
 
       {/* ── Google Analytics 4 ── */}
       {gaEnabled && gaId && (
-        <>
+        <React.Fragment key="ga4">
           <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
           <script
             dangerouslySetInnerHTML={{
@@ -70,12 +72,12 @@ export default function TrackingScripts() {
               `
             }}
           />
-        </>
+        </React.Fragment>
       )}
 
       {/* ── Google Tag Manager ── */}
       {gtmEnabled && gtmId && (
-        <>
+        <React.Fragment key="gtm">
           <script
             dangerouslySetInnerHTML={{
               __html: `
@@ -92,7 +94,7 @@ export default function TrackingScripts() {
               __html: `<iframe src="https://www.googletagmanager.com/ns.html?id=${gtmId}" height="0" width="0" style="display:none;visibility:hidden"></iframe>`
             }}
           />
-        </>
+        </React.Fragment>
       )}
     </>
   );
