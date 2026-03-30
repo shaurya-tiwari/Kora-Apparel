@@ -9,6 +9,7 @@
     "seed": "node seedAdmin.js"
   },
   "dependencies": {
+    "@imagekit/nodejs": "^7.3.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -22,10 +23,12 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^8.0.3",
     "razorpay": "^2.9.2",
-    "redis": "^5.11.0",
     "sharp": "^0.33.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "jest": "^30.3.0",
+    "mongodb-memory-server": "^10.4.3",
+    "nodemon": "^3.1.0",
+    "supertest": "^7.2.2"
   }
 }
