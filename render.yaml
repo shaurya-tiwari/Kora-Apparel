@@ -67,5 +67,6 @@ services:
     name: kora-apparel-redis
     region: singapore
     plan: free
-    # IP allowlist is removed to keep Redis private and secure. 
+    ipAllowList: []
+    # IP allowlist ensures Redis is kept private. 
     # Only services in this blueprint can access it internally.
