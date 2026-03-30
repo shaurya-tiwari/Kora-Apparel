@@ -1,0 +1,86 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: Free shipping on orders over ₹5,000
+    - generic [ref=e6]: Free shipping on orders over ₹5,000
+    - generic [ref=e7]: Free shipping on orders over ₹5,000
+    - generic [ref=e8]: Free shipping on orders over ₹5,000
+    - generic [ref=e9]: Free shipping on orders over ₹5,000
+    - generic [ref=e10]: Free shipping on orders over ₹5,000
+    - generic [ref=e11]: Free shipping on orders over ₹5,000
+    - generic [ref=e12]: Free shipping on orders over ₹5,000
+  - banner [ref=e13]:
+    - generic [ref=e14]:
+      - link "Kora" [ref=e15] [cursor=pointer]:
+        - /url: /
+      - navigation
+      - generic [ref=e16]:
+        - button "Search" [ref=e17]:
+          - img [ref=e18]
+        - link "Account" [ref=e21] [cursor=pointer]:
+          - /url: /account?tab=login
+          - img [ref=e22]
+        - link "Cart (0)" [ref=e25] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e26]
+  - main [ref=e29]:
+    - generic [ref=e31]:
+      - heading "Your Cart is Empty" [level=1] [ref=e32]
+      - paragraph [ref=e33]: Looks like you haven't added anything to your cart yet. Discover our latest minimal drops.
+      - link "Explore Collection" [ref=e34] [cursor=pointer]:
+        - /url: /shop
+        - button "Explore Collection" [ref=e35]
+  - contentinfo [ref=e36]:
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - link "KORA" [ref=e40] [cursor=pointer]:
+            - /url: /
+            - heading "KORA" [level=2] [ref=e41]
+          - paragraph [ref=e42]: Premium, minimal fashion designed for the bold. Redefining modern apparel with timeless silhouettes.
+        - generic [ref=e43]:
+          - heading "Shop" [level=4] [ref=e44]
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - link "All Products" [ref=e47] [cursor=pointer]:
+                - /url: /shop
+            - listitem [ref=e48]:
+              - link "Latest Drops" [ref=e49] [cursor=pointer]:
+                - /url: /drops
+        - generic [ref=e50]:
+          - heading "Links" [level=4] [ref=e51]
+          - list [ref=e52]:
+            - listitem [ref=e53]:
+              - link "Shop" [ref=e54] [cursor=pointer]:
+                - /url: /shop
+            - listitem [ref=e55]:
+              - link "About" [ref=e56] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e57]:
+              - link "Contact" [ref=e58] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e59]:
+          - heading "Newsletter" [level=4] [ref=e60]
+          - paragraph [ref=e61]: Subscribe for exclusive drops and early access.
+          - generic [ref=e62]:
+            - textbox "Email Address" [ref=e63]
+            - button [ref=e64]:
+              - img [ref=e65]
+      - generic [ref=e67]:
+        - paragraph [ref=e68]: © 2026 Kora Apparel. All rights reserved.
+        - generic [ref=e69]:
+          - link "Privacy" [ref=e70] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e71] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e77] [cursor=pointer]:
+    - img [ref=e78]
+  - alert [ref=e81]
+  - link "Chat on WhatsApp" [ref=e82] [cursor=pointer]:
+    - /url: https://wa.me/919876543210?text=Hi%20Kora%20Apparel!%20I%20need%20some%20help.
+    - img [ref=e83]
+    - generic: Chat with us
+```

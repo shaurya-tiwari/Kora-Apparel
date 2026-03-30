@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "seed": "node seedAdmin.js"
+    "seed": "node seedAdmin.js",
+    "test": "jest --forceExit --detectOpenHandles",
+    "test:coverage": "jest --forceExit --detectOpenHandles --coverage"
   },
   "dependencies": {
     "@imagekit/nodejs": "^7.3.0",
@@ -27,18 +29,23 @@
     "nodemailer": "^8.0.3",
     "pm2": "^6.0.14",
     "razorpay": "^2.9.2",
-<<<<<<< HEAD
-    "sharp": "^0.33.3"
-=======
-    "redis": "^5.11.0",
     "sharp": "^0.33.3",
     "zod": "^4.3.6"
->>>>>>> 5f9dc651be5a91da6d062bd52616703fd6291269
   },
   "devDependencies": {
     "jest": "^30.3.0",
     "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.1.0",
     "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/tests/setup.js"
+    ],
+    "testTimeout": 30000,
+    "verbose": true
   }
 }
