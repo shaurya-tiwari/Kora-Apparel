@@ -107,16 +107,13 @@ router.post('/register', async (req, res, next) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Update or create verification record
+    // Update or create verification record - STORE PLAIN PASSWORD (MODEL WILL HASH)
     await Verification.findOneAndUpdate(
       { email },
-      { name, password: hashedPassword, otp, otpExpires, type: 'signup' },
+      { name, password, otp, otpExpires, type: 'signup' },
       { upsert: true, new: true }
     );
 
