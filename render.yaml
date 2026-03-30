@@ -24,7 +24,10 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: kora-apparel-redis
+          property: connectionString
       - key: IMAGEKIT_PUBLIC_KEY
         sync: false
       - key: IMAGEKIT_PRIVATE_KEY
@@ -60,12 +63,12 @@ services:
         fromService:
           type: web
           name: kora-apparel-backend
-          property: url
+          property: host
       - key: NEXT_PUBLIC_BACKEND_URL
         fromService:
           type: web
           name: kora-apparel-backend
-          property: url
+          property: host
 
   # ────────────────────────────────────────────────────────────────────────────
   # 3. Redis Cache Service (Optional unless strictly relying on Redis)
@@ -74,3 +77,6 @@ services:
     name: kora-apparel-redis
     region: singapore
     plan: free
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: Allow Connections from anywhere
