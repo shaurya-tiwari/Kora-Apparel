@@ -10,7 +10,7 @@ services:
     region: singapore
     plan: free
     runtime: docker
-    dockerFilePath: Dockerfile.backend
+    dockerfilePath: Dockerfile.backend
     envVars:
       - key: PORT
         value: 5000
@@ -47,7 +47,7 @@ services:
     region: singapore
     plan: free
     runtime: docker
-    dockerFilePath: Dockerfile.frontend
+    dockerfilePath: Dockerfile.frontend
     envVars:
       - key: NEXT_PUBLIC_API_URL
         fromService:
