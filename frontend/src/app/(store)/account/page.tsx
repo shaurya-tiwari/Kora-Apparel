@@ -404,7 +404,7 @@ function AccountContent() {
                     className="h-12 rounded-xl bg-muted/20"
                   />
                 </div>
-                <Button disabled={loading} className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-xs mt-4">
+                <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-xs mt-4">
                   {loading ? 'Processing...' : authAction === 'login' ? 'Continue with Email' : 'Create Account'}
                 </Button>
               </form>
@@ -419,7 +419,7 @@ function AccountContent() {
                     className="h-12 rounded-xl bg-muted/20 text-center text-xl font-bold tracking-widest"
                   />
                 </div>
-                <Button disabled={loading} className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-xs">
+                <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-xs">
                   {loading ? 'Verifying...' : 'Establish Session'}
                 </Button>
                 <button type="button" onClick={() => setShowOtpInput(false)} className="w-full text-xs font-medium text-muted-foreground hover:text-foreground">
